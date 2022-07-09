@@ -8,6 +8,8 @@ my_realm = 'jikken'
 my_roles =  ["jikken_user", "jikken_superuser", "jikken_administrator"]
 my_groups =  ["jikken_teamA", "jikken_teamB", "jikken_teamC", "jikken_teamD"]
 
+#   ダミーのユーザとしてこの素晴らしいサイトで生成したデータを試用する。
+#     https://testdata.userlocal.jp/
 csv_file = './dummy.csv'
 
 #
@@ -102,6 +104,7 @@ def create_group(token, realm, group):
 
 #
 # ユーザを作成
+#   TODO: 同時にロールを追加したい。
 #
 def create_user(token, realm, user, group):
     print("create_user("+token+", "+realm+", "+user[0]+", "+group+")")
@@ -122,7 +125,9 @@ def create_user(token, realm, user, group):
         print(r.text)
         quit()
 
-
+#
+# ユーザ情報取得
+#
 def get_user_info(token, realm, username):
     print("get_user_info("+token+", "+realm+", "+username+")")
     r = requests.get(
@@ -134,6 +139,9 @@ def get_user_info(token, realm, username):
         quit()
     return json.loads(r.text)[0]
 
+#
+# ユーザのグループへの追加
+#
 def set_user_role(token, realm, uid, role_id, role_name):
     print("set_user_role("+token+", "+realm+", "+uid+", "+ role_id+", "+role_name+")")
     r = requests.post(
@@ -147,28 +155,36 @@ def set_user_role(token, realm, uid, role_id, role_name):
 
 
 def main():
+    # トークン取得
     token = get_access_token()
+    # 現在のレルム一覧を取得
     realms = get_realms(token)
+    # もし今から作ろうとしているレルムがすでにあったら削除
     for realm in realms:
         if realm['realm'] == my_realm:
             del_realms(token, my_realm)
+    # レルム作成
     create_realm(token, my_realm)
+    # レルムロール作成
     for role in my_roles:
         create_role(token, my_realm, role)
+    # ロールの情報を取得
     role_info = get_roles_info(token, my_realm)
+    # グループ作成
     for g in my_groups:
         create_group(token, my_realm, g)
-
-
-    #   ダミーのユーザとしてこの素晴らしいサイトで生成したデータを試用する。
-    #     https://testdata.userlocal.jp/
+    # ユーザ情報が書いてあるCSVファイルを一行ずつ読んで追加していく
     text = open(csv_file, "r", encoding="utf-8", errors="", newline="" )
     f = csv.reader(text, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"', skipinitialspace=True)
     header = next(f)
     for i, user in enumerate(f):
+        # ユーザ作成
         create_user(token, my_realm, user, my_groups[i%len(my_groups)])
+        # ユーザ情報の取得
         user = get_user_info(token, my_realm, user[0])
+        # このユーザに追加したいロールを決めて、、
         rolename = my_roles[i%len(my_roles)]
+        # ユーザにロールをマッピング
         set_user_role(token, my_realm, user['id'], role_info[role]['id'], role)
 
 if __name__ == '__main__':
