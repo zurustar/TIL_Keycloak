@@ -34,13 +34,13 @@ services:
 
 ## リバースプロキシの起動
 
-SSO を実現する方法のひとつに、Web アプリの前段に OIDC に対応したリバースプロキシを設置して、認証回りの処理は全てこいつにやらせるという方法がある。
+SSO を実現する方法のひとつに、Web アプリの前段に [https://openid.net/connect/](OIDC) に対応したリバースプロキシを設置して、認証回りの処理は全てこいつにやらせるという方法がある。
 
-[https://httpd.apache.org/](Apache)では mod_auth_opendic というモジュールがあるので、これを使ってみることにする。
+[https://httpd.apache.org/](Apache)では [https://github.com/zmartzone/mod_auth_openidc](mod_auth_opendic) というモジュールがあるので、これを使ってみることにする。
 
 ## 実験用クライアントの環境準備
 
-手元のマシンに Python が入っていたので Python でやってみる。
+手元のマシンに [https://www.python.org/](python) が入っていたので [https://www.python.org/](python) でやってみる。
 一応仮想環境をつくってから実施する。
 
 ```
@@ -53,7 +53,7 @@ python -m venv .venv
 .\.venv\Scripts\activate.bat
 ```
 
-これを実施してから、このリポジトリに含まれる client.py を実行してください。
+これを実施してから、このリポジトリに含まれる [https://github.com/zurustar/TIL_Keycloak/blob/main/tool/client.py](client.py) を実行してください。
 
 あとはコードを見てください。レルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加を実行しています。
 ユーザ作成時に直接ロールに追加できるのではないだろうか？と疑っていますが今のところよくわからず、引き続き調査中です。
