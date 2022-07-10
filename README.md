@@ -1,20 +1,42 @@
 # TIL_Keycloak
 
-Keycloak の基本的な使い方を把握するために試行錯誤している記録です。
+[https://www.keycloak.org/](Keycloak) の基本的な使い方を把握するために試行錯誤している記録です。
 
 規模の大きいシステムでユーザー登録等を GUI で実施するのは現実的でないように思えたので、極力 API で操作しています。
 
 ## Keycloak の起動
 
-Keycloak を起動する。[https://www.keycloak.org/getting-started/getting-started-docker](こちら)に従って Docker でやってみる。
+[https://www.keycloak.org/](Keycloak) を起動する。[https://www.keycloak.org/getting-started/getting-started-docker](こちら)に従って [https://www.docker.com/](Docker) でやってみる。
 
-ちなみに keycloak のバージョン 17 から起動方法が変わっているので注意。
+ちなみに [https://www.keycloak.org/](Keycloak) のバージョン 17 から起動方法が変わっているので注意。
 
 ```
 docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:18.0.2 start-dev
 ```
 
-これで、ブラウザで http://localhost:8080/にアクセスすると keycloak の Web インタフェースにアクセスすることができる。上記コマンドをよく見るとわかるように、管理者のアカウントとパスワードは両方とも admin になっている。
+これを [https://docs.docker.com/compose/](Docker Compose) でやるなら docker-compose.yml はこうなる
+
+```
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:18.0.2
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8080:8080"
+    entrypoint:
+      - /opt/keycloak/bin/kc.sh
+      - start-dev
+```
+
+これで、ブラウザで http://localhost:8080/にアクセスすると [https://www.keycloak.org/](Keycloak) の Web インタフェースにアクセスすることができる。上記コマンドをよく見るとわかるように、管理者のアカウントとパスワードは両方とも admin になっている。
+
+## リバースプロキシの起動
+
+SSO を実現する方法のひとつに、Web アプリの前段に OIDC に対応したリバースプロキシを設置して、認証回りの処理は全てこいつにやらせるという方法がある。
+
+[https://httpd.apache.org/](Apache)では mod_auth_opendic というモジュールがあるので、これを使ってみることにする。
 
 ## 実験用クライアントの環境準備
 

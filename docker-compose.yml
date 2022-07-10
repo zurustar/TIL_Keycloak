@@ -1,0 +1,15 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:18.0.2
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8080:8080"
+    entrypoint:
+      - /opt/keycloak/bin/kc.sh
+      - start-dev
+  reverse_proxy:
+    image: httpd:2.4
+    ports:
+      - "80:80"
