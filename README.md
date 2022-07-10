@@ -14,7 +14,7 @@
 docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:18.0.2 start-dev
 ```
 
-これを [Docker Compose](https://docs.docker.com/compose/) でやるなら docker-compose.yml はこうなる
+これを [Docker Compose](https://docs.docker.com/compose/) でやるなら [docker-compose.yml](https://github.com/zurustar/TIL_Keycloak/blob/main/docker-compose.yml) はこうなる
 
 ```
 services:
@@ -30,13 +30,15 @@ services:
       - start-dev
 ```
 
-これで、ブラウザで http://localhost:8080/にアクセスすると [Keycloak](https://www.keycloak.org/) の Web インタフェースにアクセスすることができる。上記コマンドをよく見るとわかるように、管理者のアカウントとパスワードは両方とも admin になっている。
+これで、ブラウザで http://localhost:8080/ にアクセスすると [Keycloak](https://www.keycloak.org/) の Web インタフェースにアクセスすることができる。上記コマンドをよく見るとわかるように、管理者のアカウントとパスワードは両方とも admin になっている。
 
 ## リバースプロキシの起動
 
 SSO を実現する方法のひとつに、Web アプリの前段に [OIDC](https://openid.net/connect/) に対応したリバースプロキシを設置して、認証回りの処理は全てこいつにやらせるという方法がある。
 
 [Apache](https://httpd.apache.org/)では [mod_auth_opendic](https://github.com/zmartzone/mod_auth_openidc) というモジュールがあるので、これを使ってみることにする。
+
+...鋭意実験中。
 
 ## 実験用クライアントの環境準備
 
@@ -57,5 +59,3 @@ python -m venv .venv
 
 あとはコードを見てください。レルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加を実行しています。
 ユーザ作成時に直接ロールに追加できるのではないだろうか？と疑っていますが今のところよくわからず、引き続き調査中です。
-
-## リバースプロキシの設定
