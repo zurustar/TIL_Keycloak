@@ -1,3 +1,10 @@
+
+#
+# pip install Flask
+# pip install uvicorn
+# uvicorn app:app --reload
+#
+
 from flask import Flask
 app = Flask("dummy")
 
@@ -5,5 +12,4 @@ app = Flask("dummy")
 def hello():
     return {"message": "Ok"}
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
