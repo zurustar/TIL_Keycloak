@@ -115,7 +115,6 @@ def get_groups(token, realm):
 
 #
 # ユーザを作成
-#   TODO: 同時にロールを追加したい。
 #
 def create_user(token, realm, user, group):
     ary = user[1].split(' ')
@@ -127,7 +126,7 @@ def create_user(token, realm, user, group):
             'email': user[6],
             'firstName': ary[0],
             'lastName': ary[1],
-            'groups': [group], # グループに登録できる
+            'groups': [group], # グループに登録できる、いずれ別APIに分離する予定
             'attributes': {
                 "age": user[2],
                 "zipcode": user[9],

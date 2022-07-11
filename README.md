@@ -34,22 +34,23 @@ services:
 
 ## 実験用データの環境準備
 
-手元のマシンに [python](https://www.python.org/) が入っていたので [python](https://www.python.org/) でやってみる。
-一応仮想環境をつくってから実施する。
+[個人情報テストデータジェネレーター](https://testdata.userlocal.jp/)を利用させていただき個人情報のダミーデータを準備し、手元のマシンに [python](https://www.python.org/) が入っていたので [python](https://www.python.org/) で Keycloak の API を使ってユーザ登録などを実施するツールを作った。
+
+一応 python を実行するための仮想環境をつくってから実施する。
 
 ```
 python -m venv .venv
 ```
 
-有効化するコマンドは OS によって異なる。以下は [Windows](https://www.microsoft.com/ja-jp/windows/) で PowerShell を使っている場合。
+有効化するコマンドは OS によって異なる。 [Windows](https://www.microsoft.com/ja-jp/windows/) で PowerShell を使っている場合は以下のような感じになる。
 
 ```
 .\.venv\Scripts\activate.ps1
 ```
 
-これを実施してからこのリポジトリに含まれる [client.py](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/client.py) を実行してください。pip install requests しないといけないかもしれません。何をしているかはコードを見てください。レルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加、クライアントの登録を実行している。
+これを実施してからこのリポジトリに含まれる [client.py](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/client.py) を実行する。pip install requests しないといけないかもしれない。このツールはレルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加、クライアントの登録を実行している。詳細は[ソースコード](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/client.py)を参照すること。
 
-ユーザ作成時に直接ロールに追加できるのではないだろうか？と疑っていますが今のところよくわからず、引き続き調査する。
+現状ではユーザ作成時にグループに登録しているが、ユーザ登録後に別の API でグループに登録するように変更する予定。
 
 ## リバースプロキシの起動
 
@@ -59,4 +60,4 @@ SSO を実現する方法のひとつに、Web アプリの前段に [OIDC](http
 
 このリバースプロキシに認証周りの処理を実行してほしいので、クライアントとして [Keycloak](https://www.keycloak.org/)に登録する…というのは実はこの前に実行している[ツール](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/client.py)の中で実施済み。手動で実施する場合は、[Keycloak](https://www.keycloak.org/) の [管理コンソール](http://localhost:8080/) に管理者でログインして左メニューの Clients をクリックして[表示される画面](http://localhost:8080/admin/master/console/#/realms/jikken/clients)で適宜入力すればよい。
 
-※現在リバプロ用の Apache を起動する Dockerfile 作成で試行錯誤中。わかったらまた追記します。[こちら](https://qiita.com/Esfahan/items/e44c9b866cb037034541)を勉強させていただくとなにかわかりそう。
+※現在リバプロ用の Apache を起動する Dockerfile 作成で試行錯誤中。わかったらまた追記する予定。[こちら](https://qiita.com/Esfahan/items/e44c9b866cb037034541)を勉強させていただくとなにかわかりそう。
