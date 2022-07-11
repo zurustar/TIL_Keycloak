@@ -48,7 +48,7 @@ python -m venv .venv
 .\.venv\Scripts\activate.ps1
 ```
 
-これを実施してからこのリポジトリに含まれる [client.py](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/client.py) を実行する。pip install requests しないといけないかもしれない。このツールはレルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加、クライアントの登録を実行している。詳細は[ソースコード](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/client.py)を参照すること。ちなみに私の PC では 1 万ユーザ分のデータを使って 10 秒強で実行が完了する。
+これを実施してからこのリポジトリに含まれる [tool.py](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/tool.py) を実行する。pip install requests しないといけないかもしれない。このツールはレルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加、クライアントの登録を実行している。詳細は[ソースコード](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/tool.py)を参照すること。ちなみに私の PC では 1 万ユーザ分のデータを使って 10 秒強で実行が完了する。
 
 現状ではユーザ作成時にグループに登録しているが、ユーザ登録後に別の API でグループに登録するように変更する予定。
 
@@ -60,7 +60,7 @@ SSO を実現する方法のひとつに、Web アプリの前段に [OIDC](http
 
 [Apache](https://httpd.apache.org/)では [mod_auth_opendic](https://github.com/zmartzone/mod_auth_openidc) というモジュールがあるので、これを使ってみることにする。
 
-このリバースプロキシに認証周りの処理を実行してほしいので、クライアントとして [Keycloak](https://www.keycloak.org/)に登録する…というのは実はこの前に実行している[ツール](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/client.py)の中で実施済み。手動で実施する場合は、[Keycloak](https://www.keycloak.org/) の [管理コンソール](http://localhost:8080/) に管理者でログインして左メニューの Clients をクリックして[表示される画面](http://localhost:8080/admin/master/console/#/realms/jikken/clients)で適宜入力すればよい。
+このリバースプロキシに認証周りの処理を実行してほしいので、クライアントとして [Keycloak](https://www.keycloak.org/)に登録する…というのは実はこの前に実行している[ツール](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/tool.py)の中で実施済み。手動で実施する場合は、[Keycloak](https://www.keycloak.org/) の [管理コンソール](http://localhost:8080/) に管理者でログインして左メニューの Clients をクリックして[表示される画面](http://localhost:8080/admin/master/console/#/realms/jikken/clients)で適宜入力すればよい。
 
 ※現在リバプロ用の Apache を起動する Dockerfile 作成で試行錯誤中。わかったらまた追記する予定。[こちら](https://qiita.com/Esfahan/items/e44c9b866cb037034541)を勉強させていただくとなにかわかりそう。
 
