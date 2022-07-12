@@ -54,7 +54,7 @@ python -m venv .venv
 pip -r ./requirements.txt
 ```
 
-これを実施してからこのリポジトリに含まれる [tool.py](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/tool.py) を実行する。このツールはレルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加、クライアントの登録を実行している。詳細は[ソースコード](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/tool.py)を参照すること。ちなみに私の PC では 1 万ユーザ分のデータを使って 10 秒強で実行が完了する。
+これを実施してからこのリポジトリに含まれる [tool.py](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/tool.py) を実行する。このツールはレルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加、クライアントの登録を実行している。詳細は[ソースコード](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/tool.py)を参照すること。
 
 現状ではユーザ作成時にグループに登録しているが、ユーザ登録後に別の API でグループに登録するように変更する予定。
 
