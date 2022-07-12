@@ -73,3 +73,5 @@ SSO を実現する方法のひとつに、Web アプリの前段に [OIDC](http
 # ダミー API サーバ
 
 [Wikipedia](https://ja.wikipedia.org/wiki)の[データ](https://dumps.wikimedia.org/jawiki)でも提供しようかと考えているが、データが巨大なのでちがう良いものがあったらそちらを使う。
+
+※ Python で書いていたのだが m1 mac で psycopg2 が上手いこと使えず、やむをえず go に変更。

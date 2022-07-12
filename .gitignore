@@ -2,3 +2,6 @@
 dummy.csv
 __pycache__
 *.pyc
+pgdata
+.DS_Store
+dummy_api/DummyAPI

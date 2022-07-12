@@ -1,6 +1,7 @@
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:18.0.2
+    container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -9,7 +10,22 @@ services:
     entrypoint:
       - /opt/keycloak/bin/kc.sh
       - start-dev
+
   reverse_proxy:
     image: httpd:2.4
+    container_name: apache_as_reverse_proxy
     ports:
       - "80:80"
+
+  db:
+    image: postgres:14.4
+    container_name: postgresql_for_api
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--no-locale"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./pginit:/docker-entrypoint-initdb.d
