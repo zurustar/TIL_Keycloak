@@ -287,13 +287,13 @@ func setUserRole(realm, token string, user UserInfoDetail, role RoleInfoDetail) 
 		ClientRole  bool   `json:"clientRole"`
 		ContainerID string `json:"containerId"`
 	}
-	body := UserRole{
+	body := []UserRole{{
 		ID:          role.ID,
 		Name:        role.Name,
 		Composite:   false,
 		ClientRole:  false,
 		ContainerID: "",
-	}
+	}}
 	post("/admin/realms/"+realm+"/users/"+user.ID+"/role-mappings/realm", token, body)
 
 }
@@ -353,6 +353,8 @@ func post(path, token string, jsondata any) string {
 		log.Fatal(err)
 	}
 	if !(200 <= resp.StatusCode && resp.StatusCode < 300) {
+		log.Println(baseURL+path)
+		log.Println(string(buf))
 		log.Println(string(body))
 		log.Fatal(fmt.Errorf("%d", resp.StatusCode))
 	}
