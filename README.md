@@ -34,19 +34,25 @@ services:
 
 ## 実験用データの環境準備
 
-[個人情報テストデータジェネレーター](https://testdata.userlocal.jp/)を利用させていただき個人情報のダミーデータを使用し、Keycloak の API を使ってユーザ登録などを実施するツールを作った。
+[個人情報テストデータジェネレーター](https://testdata.userlocal.jp/)を利用させていただき個人情報のダミーデータを生成して Keycloak の API を使ってユーザ登録などを実施するツールを作った。
+
+※ちなみに同姓同名のレコードが含まれる場合がある。ユニークなキーであると想定してデータ登録すると失敗するので注意。
 
 go の環境を準備してから(Windows や mac ならインストーラが提供されているのでかんたんに準備できるはず)、このリポジトリに含まれる [tool/main.go](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/main.go) を実行する（コマンドプロンプトで tool 配下に移動して go run ./main.go、あるいは go build して生成される実行ファイルを用いても良い）。このツールはレルム一覧取得、レルム削除、レルム作成、レルムロール作成、レルムロール情報取得、グループ作成、ユーザ作成、ユーザ情報取得、ユーザのグループへの追加、ユーザへのロールの追加、クライアントの登録を実行している。詳細は[ソースコード](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/main.go)を参照すること。
 
 ## リバースプロキシの起動
 
-SSO を実現する方法のひとつに、Web アプリの前段に [OIDC](https://openid.net/connect/) に対応したリバースプロキシを設置して、認証回りの処理は全てこいつにやらせるという方法がある。
+SSO を実現する方法のひとつに、Web アプリの前段に [OIDC](https://openid.net/connect/) に対応したリバースプロキシを設置して、認証回りの処理は全てこいつにやらせるという方法がある。各アプリに OIDC を実装する必要がないのと、Keycloak が公式に提供している OpenID Connect 用クライアントアダプタがフロントエンドの JavaScript 向けのもの以外は廃止されている([ダウンロードページ](https://www.keycloak.org/downloads)にいくと JavaScript 以外 DEPRECATED となっている)ので、アプリで実装するのは避けたほうがいいのではないかと個人的に感じている。
 
 [Apache](https://httpd.apache.org/)では [mod_auth_opendic](https://github.com/zmartzone/mod_auth_openidc) というモジュールがあるので、これを使ってみることにする。
 
 このリバースプロキシに認証周りの処理を実行してほしいので、クライアントとして [Keycloak](https://www.keycloak.org/)に登録する…というのは実はこの前に実行している[ツール](https://github.com/zurustar/TIL_Keycloak/blob/main/tool/main.go)の中で実施済み。手動で実施する場合は、[Keycloak](https://www.keycloak.org/) の [管理コンソール](http://localhost:8080/) に管理者でログインして左メニューの Clients をクリックして[表示される画面](http://localhost:8080/admin/master/console/#/realms/jikken/clients)で適宜入力すればよい。
 
-※現在リバプロ用の Apache を起動する Dockerfile 作成で試行錯誤中。わかったらまた追記する予定。[こちら](https://qiita.com/Esfahan/items/e44c9b866cb037034541)を勉強させていただくとなにかわかりそう。
+まず Apache に mod-auth-openidc を導入する[Dockerfile](https://github.com/zurustar/TIL_Keycloak/blob/main/reverse_proxy/Dockerfile)を[こちら](https://qiita.com/Esfahan/items/e44c9b866cb037034541)から頂いた。
+
+続いて[Apache の設定ファイル](https://github.com/zurustar/TIL_Keycloak/blob/main/reverse_proxy/conf/openidc.conf)も[こちら](https://qiita.com/Esfahan/items/e44c9b866cb037034541)から頂いた。
+
+※引き続き[こちら](https://qiita.com/Esfahan/items/e44c9b866cb037034541)を勉強させていただいている中。
 
 # ダミー API サーバ
 
