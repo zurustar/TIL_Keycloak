@@ -61,24 +61,28 @@ func main() {
 			log.Fatal(err)
 		}
 		if i != 0 {
-			log.Println("create user", i, record[0])
-			createUser(myRealm, token, record)
-			user := getUser(myRealm, token, record[0])
+			_, err := createUser(myRealm, token, record)
+			if err != nil {
+				user := getUser(myRealm, token, record[0])
 
-			// 以下のグループの追加とロールの追加は現状うまくいっていない
-			log.Println("set user group", user, roles[i%len(roles)])
-			setUserGroup(myRealm, token, user, groups[i%len(groups)])
-			user = getUser(myRealm, token, record[0])
-			log.Println("map user role", user, roles[i%len(roles)])
-			setUserRole(myRealm, token, user, roles[i%len(roles)])
+				// 以下のグループの追加とロールの追加は現状うまくいっていない
+				err = setUserGroup(myRealm, token, user, groups[i%len(groups)])
+				if err != nil {
+					err = setUserRole(myRealm, token, user, roles[i%len(roles)])
+				}
+			}
 		}
 		i += 1
 	}
-
+	clientId := "demo_reverse_proxy"
+	createClient(myRealm, token, clientId)
+	clinfo := getClient(myRealm, token, clientId)
+	log.Println(string(clinfo))
 }
 
+// **************************************************************************
 //
-//
+// トークンの取得
 //
 func getAccessToken() string {
 	values := url.Values{}
@@ -122,16 +126,14 @@ func getAccessToken() string {
 
 // **************************************************************************
 //
-//
+//　レルムの操作
 //
 type RealmInfo struct {
 	Realm   string `json:"realm"`
 	Enabled bool   `json:"enabled"`
 }
 
-//
-//
-//
+// レルム情報取得
 func getRealms(token string) []string {
 	b := get("/admin/realms", token)
 	var realms []RealmInfo
@@ -146,24 +148,20 @@ func getRealms(token string) []string {
 	return result
 }
 
-//
-//
-//
+// レルム削除
 func delRealm(realm, token string) string {
 	return del("/admin/realms/"+realm, token)
 }
 
-//
-//
-//
-func createRealm(realm, token string) string {
+// レルム作成
+func createRealm(realm, token string) (string, error) {
 	body := RealmInfo{Realm: realm, Enabled: true}
 	return post("/admin/realms/", token, body)
 }
 
 // **************************************************************************
 //
-//
+// ロールの操作
 //
 type RoleInfo struct {
 	Name string `json:"name"`
@@ -173,6 +171,7 @@ type RoleInfoDetail struct {
 	ID string `json:"id"`
 }
 
+// ロール情報取得
 func getRoles(realm, token string) []RoleInfoDetail {
 	b := get("/admin/realms/"+realm+"/roles", token)
 	var roles []RoleInfoDetail
@@ -183,14 +182,15 @@ func getRoles(realm, token string) []RoleInfoDetail {
 	return roles
 }
 
-func createRole(realm, token, role string) string {
+// ロール作成
+func createRole(realm, token, role string) (string, error) {
 	body := RoleInfo{Name: role}
 	return post("/admin/realms/"+realm+"/roles", token, body)
 }
 
 // **************************************************************************
 //
-//
+// グループの操作
 //
 type GroupInfo struct {
 	Name string `json:"name"`
@@ -201,6 +201,7 @@ type GroupInfoDetail struct {
 	ID string `json:"id"`
 }
 
+// グループ情報取得
 func getGroups(realm, token string) []GroupInfoDetail {
 	b := get("/admin/realms/"+realm+"/groups", token)
 	var groups []GroupInfoDetail
@@ -211,14 +212,15 @@ func getGroups(realm, token string) []GroupInfoDetail {
 	return groups
 }
 
-func createGroup(realm, token, group string) string {
+// グループ作成
+func createGroup(realm, token, group string) (string, error) {
 	body := GroupInfo{Name: group}
 	return post("/admin/realms/"+realm+"/groups", token, body)
 }
 
 // **************************************************************************
 //
-//
+// ユーザ情報の操作
 //
 
 type UserAttributes struct {
@@ -243,7 +245,8 @@ type UserInfoDetail struct {
 	ID string `json:"id"`
 }
 
-func createUser(realm, token string, data []string) string {
+// ユーザ登録
+func createUser(realm, token string, data []string) (string, error) {
 	attr := UserAttributes{
 		Age:     []string{data[2]},
 		ZipCode: []string{data[9]},
@@ -261,6 +264,7 @@ func createUser(realm, token string, data []string) string {
 	return post("/admin/realms/"+realm+"/users", token, body)
 }
 
+// ユーザ情報取得
 func getUser(realm, token, username string) UserInfoDetail {
 	username = url.QueryEscape(username)
 	b := get("/admin/realms/"+realm+"/users?username="+username, token)
@@ -273,13 +277,16 @@ func getUser(realm, token, username string) UserInfoDetail {
 	return userInfoDetail[0]
 }
 
-func setUserGroup(realm, token string, user UserInfoDetail, group GroupInfoDetail) {
+// 特定のユーザをグループに登録する
+func setUserGroup(realm, token string, user UserInfoDetail, group GroupInfoDetail) error {
 	user.Groups = []string{group.Name}
 	log.Println(user)
-	put("/admin/realms/" + realm + "/users/" + user.ID, token, user)
+	_, err := put("/admin/realms/"+realm+"/users/"+user.ID, token, user)
+	return err
 }
 
-func setUserRole(realm, token string, user UserInfoDetail, role RoleInfoDetail) {
+// 特定のユーザのロールを設定する
+func setUserRole(realm, token string, user UserInfoDetail, role RoleInfoDetail) error {
 	type UserRole struct {
 		ID          string `json:"id"`
 		Name        string `json:"name"`
@@ -294,8 +301,29 @@ func setUserRole(realm, token string, user UserInfoDetail, role RoleInfoDetail) 
 		ClientRole:  false,
 		ContainerID: "",
 	}}
-	post("/admin/realms/"+realm+"/users/"+user.ID+"/role-mappings/realm", token, body)
+	_, err := post("/admin/realms/"+realm+"/users/"+user.ID+"/role-mappings/realm", token, body)
+	return err
+}
 
+// **************************************************************************
+//
+// クライアントの操作
+//
+
+// クライアントの登録
+func createClient(realm, token, client string) {
+	u := "/admin/realms/" + realm + "/clients"
+	type ClientInfo struct {
+		ClientID string `json:"clientId"`
+	}
+	body := ClientInfo{ClientID: client}
+	post(u, token, body)
+}
+
+// クライアント情報の習得
+func getClient(realm, token, client string) []byte{
+	u := "/admin/realms/" + realm + "/clients?clientId=" + client
+	return get(u, token)
 }
 
 // **************************************************************************
@@ -330,68 +358,72 @@ func get(path, token string) []byte {
 //
 // 登録
 //
-func post(path, token string, jsondata any) string {
+func post(path, token string, jsondata any) (string, error) {
 	buf, err := json.Marshal(jsondata)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	req, err := http.NewRequest(
 		"POST", baseURL+path, bytes.NewBuffer(buf))
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	if !(200 <= resp.StatusCode && resp.StatusCode < 300) {
-		log.Println(baseURL+path)
+		log.Println(baseURL + path)
 		log.Println(string(buf))
 		log.Println(string(body))
-		log.Fatal(fmt.Errorf("%d", resp.StatusCode))
+		return string(body), fmt.Errorf("%d", resp.StatusCode)
 	}
-	return string(body)
+	return string(body), nil
 }
 
 //
 // 更新
 //
-func put(path, token string, jsondata any) string {
+func put(path, token string, jsondata any) (string, error) {
 	buf, err := json.Marshal(jsondata)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "", err
 	}
 	req, err := http.NewRequest(
 		"PUT", baseURL+path, bytes.NewBuffer(buf))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "", err
 	}
 	if !(200 <= resp.StatusCode && resp.StatusCode < 300) {
 		log.Println(resp.StatusCode)
 		log.Println(string(body))
-		log.Fatal(fmt.Errorf("%d", resp.StatusCode))
+		return string(body), fmt.Errorf("%d", resp.StatusCode)
 	}
-	return string(body)
+	return string(body), nil
 }
 
 //
