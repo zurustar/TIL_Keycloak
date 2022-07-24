@@ -189,7 +189,7 @@ docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin
 - keycloak に Windows パソコンからログインする。URL はhttp://192.168.0.200:8080/
 - keycloak でレルムを作成する。左メニューの Master というところにマウスカーソルを合わせると「Add realm」と書いてある青いボタンが表示されるのでそれをクリックすると作成画面が表示される。この実験では demo という名前にした。
 - この実験用に作ったレルム「demo」に対してクライアントを登録する。レルムとして demo が選択されていることを確認（左メニューの上部、keycloak のロゴの下に Demo と表示される）したうえで、左メニューの Clients というところをクリックするとクライアント一覧が表形式で表示され、その表の右上にある「Create」というボタンをクリックする。クライアントを追加する画面が表示されるので、Client ID のところにすきな文字列を書き、Client Protocol はデフォルトの openid-connect のままにして Save ボタンを押す。この実験では「demo_reverse_proxy」という名前にしてみた。
-- 詳細設定画面が表示されるので、Access Type を confidential に変更、Valid Redirect URIs としてひとつめにhttp://192.168.0.200:18080/app/callback、ふたつめにhttp://192.168.0.200:18080/appを登録、Backchannelに[http://192.168.0.200:18080/app/callback?logout=backchannel](http://192.168.0.200:18080/app/callback?logout=backchannel) を登録する。Backchannel Logout Session Required はデフォルトで ON になっているはず。★AccessType にどんな値があってそれぞれどのような動きをするものなのかをあとで再確認する
+- 詳細設定画面が表示されるので、Access Type を confidential に変更、Valid Redirect URIs としてひとつめにhttp://192.168.0.200:18080/app/callback 、ふたつめにhttp://192.168.0.200:18080/app を登録、Backchannel に[http://192.168.0.200:18080/app/callback?logout=backchannel](http://192.168.0.200:18080/app/callback?logout=backchannel) を登録する。Backchannel Logout Session Required はデフォルトで ON になっているはず。★AccessType にどんな値があってそれぞれどのような動きをするものなのかをあとで再確認する
 - さらにこの client について Protocol Mapping の設定を行う。Mappers タブをクリックして表示される画面で「Create」ボタンを押し、Name を groups、Mapper Type を「Group Membership」、Token Caim Name を「groups」、Full group path を「ON」、Add to ID token を「OFF」、Add to access token を「OFF」、Add to userinfo を「ON」に設定。※ちなみにこれはグループでのアクセス制御を行う方法。
 - テスト用のユーザとグループを作る。
 
