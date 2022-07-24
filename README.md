@@ -200,7 +200,17 @@ docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin
 | Backchannel                         | http://192.168.0.200:18080/app/callback?logout=backchannel                |
 | Backchannel Logout Session Required | ON (デフォルト値のはず)                                                   |
 
-- さらにこの client について Protocol Mapping の設定を行う。Mappers タブをクリックして表示される画面で「Create」ボタンを押し、以下の用に設定。
+- さらにこの client について Protocol Mapping の設定を行う。Mappers タブをクリックして表示される画面で「Create」ボタンを押し以下のように設定。ちなみにこれはグループでのアクセス制御を行う方法。
+
+| 項目                | 値               |
+| ------------------- | ---------------- |
+| Name                | groups           |
+| Mapper Type         | Group Membership |
+| Token Claim Name    | groups           |
+| Full group path     | ON               |
+| Add to ID token     | OFF              |
+| Add to access token | OFF              |
+| Add to userinfo     | ON               |
 
 - テスト用のユーザとグループを作る。
 
