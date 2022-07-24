@@ -75,7 +75,6 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				// 以下のロールの追加は現状うまくいっていない
 				_, err = setUserRole(myRealm, token, user, roles[i%len(roles)])
 				if err != nil {
 					log.Fatal(err)
@@ -93,25 +92,27 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	
+	// admin001というユーザをつくり、Admins というグループをつくり、そのグループのIDを調べ、
+	// admin001をAdminsグループに追加する。
 	_, err = createUser(myRealm, token, []string{"admin001", "", "", "", "", "", "", "", "", "", "", ""})
 	if err != nil {
 		log.Fatal(err)
 	}
 	user := getUser(myRealm, token, "admin001")
-
-	var g GroupInfoDetail
-	g.Name = "Admins"
-	_, err = createGroup(myRealm, token, g.Name)
+	grpName := "Admins"
+	_, err = createGroup(myRealm, token, grpName)
 	if err != nil {
 		log.Fatal(err)
 	}
 	groups = getGroups(myRealm, token)
+	var grpID string
 	for _, grp := range groups {
 		if grp.Name == g.Name {
-			g.ID = grp.ID
+			grpID = grp.ID
 		}
 	}
-	_, err = setUserGroup(myRealm, token, user.ID, g.ID)
+	_, err = setUserGroup(myRealm, token, user.ID, grpID)
 	if err != nil {
 		log.Fatal(err)
 	}
