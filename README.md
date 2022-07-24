@@ -123,7 +123,7 @@ SSO を実現する方法のひとつに、Web アプリの前段に [OIDC](http
 
 # 以下作業中のメモ
 
-書籍「認証と認可 Keycloak 入門」(https://www.ric.co.jp/book/new-publication/detail/2081)の6.3章をなぞりながらリバプロでのSSOを実現する実験のメモ
+書籍「認証と認可 Keycloak 入門」(https://www.ric.co.jp/book/new-publication/detail/2081) の 6.3 章をなぞりながらリバプロでの SSO を実現する実験のメモ
 
 ## 実験環境の準備
 
