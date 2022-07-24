@@ -193,6 +193,22 @@ docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin
 - さらにこの client について Protocol Mapping の設定を行う。Mappers タブをクリックして表示される画面で「Create」ボタンを押し、Name を groups、Mapper Type を「Group Membership」、Token Caim Name を「groups」、Full group path を「ON」、Add to ID token を「OFF」、Add to access token を「OFF」、Add to userinfo を「ON」に設定。※ちなみにこれはグループでのアクセス制御を行う方法。
 - テスト用のユーザとグループを作る。
 
+### クライアントタイプについての補足
+
+クライアント登録時の詳細画面で Access Type として confidentail に変更するとしたが、クライアントには以下の種類がある。
+
+- コンフィデンシャルクライアント
+
+クレデンシャルの機密性を維持することができるクライアント。サーバサイドに設置された Web アプリケーションが該当
+
+- パブリッククライアント
+
+クレデンシャルを安全に保存できないクライアント。ブラウザ上で動作する JavaScript などが該当。
+
+- bearer-only ※keycloak 独自
+
+リソースサーバなどのトークンの発行を要求する必要がないクライアント用、コンフィデンシャルクライアントでも同様のことができるのでおそらく使う必要がない
+
 ## リバースプロキシの構築
 
 ```bash
