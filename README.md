@@ -176,6 +176,8 @@ docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin
 
 ## リバースプロキシの構築
 
+Apache をほとんど使うことがないまま生きてきてしまったので、試行錯誤しまくり。OIDC 以前に Apache がわかっていない。
+
 ```bash
 dnf install httpd
 ```
@@ -207,7 +209,28 @@ conf.modules.d:
 
 おそらく/etc/httpd/conf/httpd.conf から/etc/httpd/conf.modules.d/\*をロードしていて、00-proxy.conf がリバースプロキシの設定、10-auth_openidc.conf が RP としての設定のはず。
 
-、、あとは mod_auth_openidc の設定を書いていけばよいと思われる。たくさんあるので、ひとつひとつそれが何を示すのかを調べて記していく予定。
+設定ファイルに、いろいろかく。
+
+mod_auth_openidc の設定。どのファイルなのかわかってない、、（書籍は Ubuntu 前提なのでそのままだとダメだと思う）
+
+| 名前                                | 概要                                               |
+| ----------------------------------- | -------------------------------------------------- |
+| OIDCResponseType                    | OIDC の認証フローを設定                            |
+| OIDCCryptoPassphrase                | クッキーやキャッシュの暗号化に使用するパスフレーズ |
+| OIDCProviderMetadatgaURL            |                                                    |
+| OIDCClientID                        | Keycloak で設定した Cliend ID                      |
+| OIDCClientSecret                    | Keycloak で自動生成された secret                   |
+| OIDCRFedirectURL                    |                                                    |
+| OIDCRemoteUserClaim                 |                                                    |
+| OIDCRefreshAccessTokenBeforeExpirey |                                                    |
+
+さらに Location ディレクティブ内は以下の通り
+
+| 名前             | 概要                  |
+| ---------------- | --------------------- |
+| AuthType         | openid-connect を設定 |
+| OIDCUnAuthAction | 未認証時のふるまい    |
+| Require          |                       |
 
 # こうしたい
 
