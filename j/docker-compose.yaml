@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:14.4
+    container_name: postgressss
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--no-locale"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./pginit:/docker-entrypoint-initdb.d
