@@ -44,6 +44,69 @@ go の環境を準備してから(Windows や mac ならインストーラが提
 
 仕様を眺める以外に、Keycloak の GUI が Keycloak に対する REST クライアントになっているので、Keycloak を動かしているサーバで tcpdump を実行した状態で GUI で操作すると正しいリクエストを見ることができる。
 
+#### アクセストークンの取得
+
+POST /realms/master/protocol/openid-connect/token
+
+Content-Type を application/x-www-form-urlencoded として、username、password、grant_type、client_id を渡す。
+grant_type は password、client_id は admin-cli とする。
+
+#### Realm の登録
+
+POST /admin/realms/
+
+Content-Type を application/json として、こんなかんじ
+{"realm": レルム名, "enabled": true}
+
+#### ロールの登録
+
+POST /admin/realms/{レノム名}/roles
+
+Content-Type を application/json として、こんなかんじ
+{"name": ロール名}
+
+#### ロール一覧の取得
+
+GET /admin/realms/{レノム名}/roles
+
+これで各ロールの ID を取得することができる。
+
+#### グループの登録
+
+POST /admin/realms/{レノム名}/groups
+
+Content-Type を application/json として、こんなかんじ
+{"name": グループ名}
+
+#### グループ一覧の取得
+
+GET /admin/realms/{レノム名}/groups
+
+これで各グループの ID を取得することができる。
+
+#### ユーザの登録
+
+POST /admin/realms/{レノム名}/users
+
+#### ユーザ情報の取得
+
+GET /admin/realms/{レノム名}/users?username={ユーザ名}
+
+これを使ってユーザの ID を取得することができる
+
+#### ユーザへのロールの割り当て
+
+PUT /admin/realms/{レノム名}/users/{ユーザ ID}/role-mappings/realm
+
+Content-Type を application/json として、ボディに配列でロールの名前と ID のペアを渡す。
+[{"name":ロール名, "id": ロール ID}]
+
+#### ユーザへのグループの割り当て
+
+PUT /admin/realms/{レノム名}/users/{ユーザ ID}/groups/{グループ ID}
+
+レノムは名前だけれどそれ以外は ID である点に注意。
+
 ## リバースプロキシの起動
 
 SSO を実現する方法のひとつに、Web アプリの前段に [OIDC](https://openid.net/connect/) に対応したリバースプロキシを設置して、認証回りの処理は全てこいつにやらせるという方法がある。各アプリに OIDC を実装する必要がないのと、Keycloak が公式に提供している OpenID Connect 用クライアントアダプタがフロントエンドの JavaScript 向けのもの以外は廃止されている([ダウンロードページ](https://www.keycloak.org/downloads)にいくと JavaScript 以外 DEPRECATED となっている)ので、アプリで実装するのは避けたほうがいいのではないかと個人的に感じている。
