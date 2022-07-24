@@ -213,24 +213,26 @@ conf.modules.d:
 
 mod_auth_openidc の設定。どのファイルなのかわかってない、、（書籍は Ubuntu 前提なのでそのままだとダメだと思う）
 
-| 名前                                | 概要                                               |
-| ----------------------------------- | -------------------------------------------------- |
-| OIDCResponseType                    | OIDC の認証フローを設定                            |
-| OIDCCryptoPassphrase                | クッキーやキャッシュの暗号化に使用するパスフレーズ |
-| OIDCProviderMetadatgaURL            |                                                    |
-| OIDCClientID                        | Keycloak で設定した Cliend ID                      |
-| OIDCClientSecret                    | Keycloak で自動生成された secret                   |
-| OIDCRFedirectURL                    |                                                    |
-| OIDCRemoteUserClaim                 |                                                    |
-| OIDCRefreshAccessTokenBeforeExpirey |                                                    |
+| 名前                                | 概要                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| OIDCResponseType                    | OIDC の認証フローを設定、code にする                                     |
+| OIDCCryptoPassphrase                | クッキーやキャッシュの暗号化に使用するパスフレーズ                       |
+| OIDCProviderMetadatgaURL            |                                                                          |
+| OIDCClientID                        | Keycloak で設定した Cliend ID                                            |
+| OIDCClientSecret                    | Keycloak で自動生成された secret                                         |
+| OIDCRFedirectURL                    | keycloak から認可コードを受け取る URL                                    |
+| OIDCRemoteUserClaim                 | Apache の REMOTE_USER 環境変数に設定する ID トークンのクレーム名         |
+| OIDCRefreshAccessTokenBeforeExpirey | アクセストークンの有効期限の何秒前になったらトークンをリフレッシュするか |
 
 さらに Location ディレクティブ内は以下の通り
 
-| 名前             | 概要                  |
-| ---------------- | --------------------- |
-| AuthType         | openid-connect を設定 |
-| OIDCUnAuthAction | 未認証時のふるまい    |
-| Require          |                       |
+| 名前             | 概要                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| AuthType         | openid-connect を設定                                                                  |
+| OIDCUnAuthAction | 未認証時のふるまい「auth」OP にリダイレクト、「pass」アクセス許可、「401」アクセス拒否 |
+| Require          |                                                                                        |
+
+※改めてフローを見て、どこでなにを渡しているのかを確認したほうがよさそうだ
 
 # こうしたい
 
