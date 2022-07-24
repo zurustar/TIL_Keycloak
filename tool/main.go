@@ -21,28 +21,32 @@ const baseURL = "http://192.168.0.200:8080"
 //
 func main() {
 	log.SetFlags(log.Lshortfile)
-
+	log.Println("create realm, role, groups..")
 	myRealm := "demo"
 	token := getAccessToken()
-	log.Println(token)
 	for _, realm := range getRealms(token) {
-		log.Println("check realm", realm)
 		if realm == myRealm {
-			log.Println("delete realm", realm)
 			delRealm(myRealm, token)
 		}
 	}
-	log.Println("create realm", myRealm)
-	createRealm(myRealm, token)
+	_, err := createRealm(myRealm, token)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for _, role := range []string{"demo_user", "demo_superuser", "demo_administrator"} {
-		log.Println("create role", role)
-		createRole(myRealm, token, role)
+		_, err := createRole(myRealm, token, role)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	roles := getRoles(myRealm, token)
 	for _, group := range []string{"demo_teamA", "demo_teamB", "demo_teamC", "demo_teamD"} {
-		log.Println("create group", group)
-		createGroup(myRealm, token, group)
+		_, err := createGroup(myRealm, token, group)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+	log.Println(roles)
 	groups := getGroups(myRealm, token)
 
 	fp, err := os.Open("./dummy.csv")
@@ -61,19 +65,20 @@ func main() {
 			log.Fatal(err)
 		}
 		if i != 0 {
+			log.Println("-----", i, "-----")
 			_, err := createUser(myRealm, token, record)
-			if err == nil {
+			if err != nil {
+				log.Println(err)
+			} else {
 				user := getUser(myRealm, token, record[0])
-
-				// 以下のグループの追加とロールの追加は現状うまくいっていない
-				_, err = setUserGroup(myRealm, token, user, groups[i%len(groups)])
+				_, err = setUserGroup(myRealm, token, user.ID, groups[i%len(groups)].ID)
 				if err != nil {
 					log.Fatal(err)
-				} else {
-					_, err = setUserRole(myRealm, token, user, roles[i%len(roles)])
-					if err != nil {
-						log.Fatal(err)
-					}
+				}
+				// 以下のロールの追加は現状うまくいっていない
+				_, err = setUserRole(myRealm, token, user, roles[i%len(roles)])
+				if err != nil {
+					log.Fatal(err)
 				}
 			}
 		}
@@ -84,25 +89,31 @@ func main() {
 	clinfo := getClient(myRealm, token, clientId)
 	log.Println(string(clinfo))
 
-	_ , err  = createUser(myRealm, token, []string{"user001", "", "", "", "", "", "", "", "", "", "", ""})
-	if err == nil {
-		_ , err  = createUser(myRealm, token, []string{"admin001", "", "", "", "", "", "", "", "", "", "", ""})
-		if err == nil {
-			user := getUser(myRealm, token, "admin001")
+	_, err = createUser(myRealm, token, []string{"user001", "", "", "", "", "", "", "", "", "", "", ""})
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = createUser(myRealm, token, []string{"admin001", "", "", "", "", "", "", "", "", "", "", ""})
+	if err != nil {
+		log.Fatal(err)
+	}
+	user := getUser(myRealm, token, "admin001")
 
-			var g GroupInfoDetail
-			g.Name = "Admins"
-			s, err := createGroup(myRealm, token, g.Name)
-			if err != nil {
-				log.Fatal(err)
-			}
-			log.Println(s)
-			s, err = setUserGroup(myRealm, token, user, g)
-			if err != nil {
-				log.Fatal(err)
-			}
-			log.Println(s)
+	var g GroupInfoDetail
+	g.Name = "Admins"
+	_, err = createGroup(myRealm, token, g.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	groups = getGroups(myRealm, token)
+	for _, grp := range groups {
+		if grp.Name == g.Name {
+			g.ID = grp.ID
 		}
+	}
+	_, err = setUserGroup(myRealm, token, user.ID, g.ID)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -307,10 +318,8 @@ func getUser(realm, token, username string) UserInfoDetail {
 }
 
 // 特定のユーザをグループに登録する
-func setUserGroup(realm, token string, user UserInfoDetail, group GroupInfoDetail) (string, error) {
-	user.Groups = []string{group.Name}
-	log.Println(user)
-	return put("/admin/realms/"+realm+"/users/"+user.ID, token, user)
+func setUserGroup(realm, token string, userID, groupID string) (string, error) {
+	return put("/admin/realms/"+realm+"/users/"+userID+"/groups/"+groupID, token, nil)
 }
 
 // 特定のユーザのロールを設定する
@@ -329,6 +338,7 @@ func setUserRole(realm, token string, user UserInfoDetail, role RoleInfoDetail) 
 		ClientRole:  false,
 		ContainerID: "",
 	}}
+	log.Println(user.Username, "さんに", body[0].Name, "のロールを割り当てます")
 	return post("/admin/realms/"+realm+"/users/"+user.ID+"/role-mappings/realm", token, body)
 }
 
@@ -341,32 +351,32 @@ func setUserRole(realm, token string, user UserInfoDetail, role RoleInfoDetail) 
 func createClient(realm, token, client string) {
 	u := "/admin/realms/" + realm + "/clients"
 	type ProtocolMapperConfig struct {
-		FullPath string `json:"full.path"`
-		IDTokenClaim string `json:"id.token.claim"`
-		AccessTokenClaim string `json:"access.token.claim"`
-		ClaimName string`json:"claim.name"`
+		FullPath           string `json:"full.path"`
+		IDTokenClaim       string `json:"id.token.claim"`
+		AccessTokenClaim   string `json:"access.token.claim"`
+		ClaimName          string `json:"claim.name"`
 		UserinfoTokenClaim string `json:"userinfo.token.claim"`
 	}
 	type ProtocolMapper struct {
-		Name string `json:"name"`
-		Protocol string `json:"protocol"`
-		ProtocolMapper string `json:"protocolMapper"`
-		ConsentRequired bool `json:"consentRequired"`
-		Config ProtocolMapperConfig `json:"config"`
+		Name            string               `json:"name"`
+		Protocol        string               `json:"protocol"`
+		ProtocolMapper  string               `json:"protocolMapper"`
+		ConsentRequired bool                 `json:"consentRequired"`
+		Config          ProtocolMapperConfig `json:"config"`
 	}
 	type ClientInfo struct {
-		ClientID string `json:"clientId"`
-		PublicClient bool `json:"publicClient"` // Access Typeをpublicにしたいときはtrue
-		RedirectURIs []string `json:"redirectUris"`
-		WebOrigins []string `json:"webOrigins"`
+		ClientID        string           `json:"clientId"`
+		PublicClient    bool             `json:"publicClient"` // Access Typeをpublicにしたいときはtrue
+		RedirectURIs    []string         `json:"redirectUris"`
+		WebOrigins      []string         `json:"webOrigins"`
 		ProtocolMappers []ProtocolMapper `json:"protocolMappers"`
-		Attributes struct {
-			BackchnnelLogoutURL string `json:"backchannel.logout.url"`
+		Attributes      struct {
+			BackchnnelLogoutURL              string `json:"backchannel.logout.url"`
 			BackchannelLogoutSessionRequired string `json:"backchannel.logout.session.required"`
 		} `json:"attributes"`
 	}
 	body := ClientInfo{
-		ClientID: client,
+		ClientID:     client,
 		PublicClient: false,
 		RedirectURIs: []string{
 			"http://192.168.0.200:18080/app/callback",
@@ -375,15 +385,15 @@ func createClient(realm, token, client string) {
 		// このプロトコルマッパーの設定により
 		// 認証したユーザが所属するグループのグループ名がUserinfoのgroupsクレームに格納されるようになる
 		ProtocolMappers: []ProtocolMapper{{
-			Name: "groups",
-			Protocol: "openid-connect",
-			ProtocolMapper: "oidc-group-membership-mapper",
+			Name:            "groups",
+			Protocol:        "openid-connect",
+			ProtocolMapper:  "oidc-group-membership-mapper",
 			ConsentRequired: false,
-			Config: ProtocolMapperConfig {
-				FullPath: "true",
-				IDTokenClaim: "false",
-				AccessTokenClaim: "false",
-				ClaimName: "groups",
+			Config: ProtocolMapperConfig{
+				FullPath:           "true",
+				IDTokenClaim:       "false",
+				AccessTokenClaim:   "false",
+				ClaimName:          "groups",
 				UserinfoTokenClaim: "true",
 			}}}}
 
@@ -435,7 +445,7 @@ func post(path, token string, jsondata any) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Println("POST", baseURL+path, string(buf))
+	//	log.Println("POST", baseURL+path, string(buf))
 	req, err := http.NewRequest(
 		"POST", baseURL+path, bytes.NewBuffer(buf))
 	if err != nil {
@@ -466,19 +476,24 @@ func post(path, token string, jsondata any) (string, error) {
 // 更新
 //
 func put(path, token string, jsondata any) (string, error) {
-	buf, err := json.Marshal(jsondata)
-	if err != nil {
-		log.Println(err)
-		return "", err
+	var err error
+	buf := []byte{}
+	if jsondata != nil {
+		buf, err = json.Marshal(jsondata)
+		if err != nil {
+			log.Println(err)
+			return "", err
+		}
 	}
-	log.Println("PUT", baseURL+path, string(buf))
 	req, err := http.NewRequest(
 		"PUT", baseURL+path, bytes.NewBuffer(buf))
 	if err != nil {
 		log.Println(err)
 		return "", err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	if jsondata != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
