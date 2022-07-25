@@ -12,37 +12,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// **************************************************************************
+//
+// 環境やkeycloakの設定に依存する値たち
+//
 
-const KeycloakURL = "http://192.168.0.200:8080"
+// keycloakのURL
+const KeycloakURL = "http://192.168.0.200:8080" 
+// keycloakで作成する必要があるrealmの名前
 const MyRealm = "demo"
-const ClientID = "kakeibo" // keycloakに登録したこのアプリのID
-const ClientSecret = "rP1bvglQwR3jfF2KP2A7jOyxxQen8gjg" // keycloakの画面からコピーしてくる
+// keycloakの上記realmに対して登録したこのアプリを示すID
+const ClientID = "kakeibo"
+// クライアント登録後にkeycloakの画面からコピーしてくる
+const ClientSecret = "rP1bvglQwR3jfF2KP2A7jOyxxQen8gjg"
+// 認可エンドポイントからリダイレクトされてくるアドレス
 const RedirectURI = "http://192.168.0.115:5000/callback"
 
-//
-// 認可エンドポイント の URLを取得する
-//
-func getAuthEndpoint(realm, clientID, RedirectURI string) string {
-	u := KeycloakURL
-	u += "/realms/" + realm + "/protocol/openid-connect/auth" // 書籍のURLはいまのKeycloakでは動かない、要注意
-	u += "?response_type=code" // 認可コードフロー
-	u += "&client_id=" + clientID // クライアント＝このサーバのID、keycloakに登録しておく必要あり
-	u += "&redirect_uri=" + url.QueryEscape(RedirectURI) // リダイレクトURI
-	return u
-}
 
-//
-// トークンエンドポイントのURLを取得する
-//
-func getTokenEndpoint(realm string) string {
-	return KeycloakURL + "/realms/" + realm + "/protocol/openid-connect/token"
-}
-
+// **************************************************************************
 //
 // トークンを取得する
 //   このAPからkeycloakに対して直接POSTする
 //
-
 type Token struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn int `json:"expires_in"`
@@ -55,12 +46,12 @@ type Token struct {
 }
 
 func getToken(realm, clientID, clientSecret, code, redirectURI string) (Token, error) {
-	u := getTokenEndpoint(realm)
+	tokenEndpoint := KeycloakURL + "/realms/" + realm + "/protocol/openid-connect/token"
 	values := url.Values{}
 	values.Add("grant_type","authorization_code")
 	values.Add("code", code)
 	values.Add("redirect_uri", redirectURI)
-	req, err := http.NewRequest("POST", u, strings.NewReader(values.Encode()))
+	req, err := http.NewRequest("POST", tokenEndpoint, strings.NewReader(values.Encode()))
 	if err != nil {
 		log.Println(err)
 		return Token{}, err
@@ -93,26 +84,34 @@ func getToken(realm, clientID, clientSecret, code, redirectURI string) (Token, e
 	return token, nil
 }
 
+
+// **************************************************************************
+//
+//
+//
+//
+//
 func main() {
 	engine := gin.Default()
 	engine.Static("/static", "./static")
 	engine.LoadHTMLGlob("templates/*")
 
-	//
+    // --------------------------------------------------------------------------
 	//
 	// ログイン要求を受けたらkeycloakにリダイレクトする
 	//
-	//
 	engine.GET("/login", func(c *gin.Context){
-		u := getAuthEndpoint(MyRealm, ClientID, RedirectURI)
-		log.Println(u)
-		c.Redirect(302, u)
+		authEndpoint := KeycloakURL
+		authEndpoint += "/realms/" + MyRealm + "/protocol/openid-connect/auth" // 書籍のURLはいまのKeycloakでは動かない、要注意
+		authEndpoint += "?response_type=code" // 認可コードフロー
+		authEndpoint += "&client_id=" + ClientID // クライアント＝このサーバのID、keycloakに登録しておく必要あり
+		authEndpoint += "&redirect_uri=" + url.QueryEscape(RedirectURI) // リダイレクトURI
+		c.Redirect(302, authEndpoint)
 	})
 
-	//
+    // --------------------------------------------------------------------------
 	//
 	// ログイン成功時にコールバックを受けるところ。認可コードが渡されるのでそれを使ってKeycloakにTokenを貰いにいく
-	//
 	//
 	engine.GET("/callback", func(c *gin.Context){
 		log.Println("keycloakに渡していたリダイレクトURL、ここに戻ってくるということは認証がうまくいったのだろう")
@@ -126,14 +125,18 @@ func main() {
 			c.HTML(500, "error.html",gin.H{})
 			return
 		}
-		log.Println(token)
+		// とってきたトークンをAPIサーバにアクセスするときに使う。
+		// またトークンの有効期限が近づいていたら先にリフレッシュトークンを使って
+		// あらたなトークンを取得する必要があると思われる。
+		// さらにログオフのときにはそのトークンの削除とkeycloakへのログオフの通知をする必要あり。
 		c.HTML(200, "content.html", gin.H{"sessionState": sessionState, "code": code, "accessToken": token.AccessToken})
 	})
 
 
 
+    // --------------------------------------------------------------------------
 	//
-	//
+	// トップページ
 	//
 	engine.GET("/", func(c *gin.Context){
 		c.HTML(200, "index.html", gin.H{})
