@@ -9,18 +9,19 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 )
 
-const SECRETKEY = "asdfasdf"
+const SECRETKEY = "HrkADtB2TuYLS9UrEyeWlbSSXrAAigMP"
 
 const CertsURI = "http://192.168.0.200:8080/realms/demo/protocol/openid-connect/certs"
 const UserinfoURI = "http://192.168.0.200:8080/realms/demo/protocol/openid-connect/userinfo"
 
 type CertRespData struct {
-	Kid     string   `json:"kid"`
-	Kty     string   `json:"kty"`
-	Alg     string   `json:"alg"`
-	Use     string   `json:"use"`
+	Kid     string   `json:"kid"` // key ID
+	Kty     string   `json:"kty"` // key type
+	Alg     string   `json:"alg"` // algorithm
+	Use     string   `json:"use"` // Public Key Use
 	N       string   `json:"n"`
 	E       string   `json:"e"`
 	X5C     []string `json:"x5c"`
@@ -54,6 +55,7 @@ func getCirts() (CertResp, error) {
 		log.Println(err)
 		return CertResp{}, err
 	}
+	log.Println(string(b))
 	var data CertResp
 	err = json.Unmarshal(b, &data)
 	if err != nil {
@@ -76,10 +78,14 @@ func checkAuthorizationHeader(c *gin.Context) {
 					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 						return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 					}
-					return []byte(SECRETKEY), nil
+					return []byte(SECRETKEY), nil // ここで公開鍵を返すようにすればいいみたい。で、公開鍵ってどこにあるの？
 				})
 				if err == nil {
+					log.Println("うまくいった！")
 					log.Println(token)
+				} else {
+					log.Println("うまくいかなかった")
+					log.Println(err)
 				}
 			}
 		}
