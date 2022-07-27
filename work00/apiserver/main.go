@@ -79,7 +79,7 @@ func checkAuthorizationHeader(c *gin.Context) {
 				// このへんの値は設定ファイルに変更する必要あり
 				u := "http://192.168.0.200:8080/realms/demo/protocol/openid-connect/token/introspect"
 				ClientID := "api_server"
-				ClientSecret := "ngCEl3yulauREgzJe1uyBDpmhSX8qa0q"
+				ClientSecret := "O4hl8oFj5SIOdcddG2V3Bj8Hwlp45Z9m"
 				req, err := http.NewRequest("POST", u, strings.NewReader(values.Encode()))
 				if err != nil {
 					log.Println(err)

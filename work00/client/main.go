@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -85,11 +86,15 @@ func procCallback(c *gin.Context) {
 	log.Println("Keycloakのセッション管理用文字列 ->", sessionState)
 	log.Println("認可コード ->", code)
 	// 認可コードを使ってトークンを取りに行く
+	log.Println("getTokenを呼び出す")
 	token, err := getToken(config.Realm, config.ClientID, config.ClientSecret, code, config.ClientURL+RedirectPath)
+	log.Println(err)
 	if err != nil {
+		log.Println(err)
 		c.HTML(500, "error.html", gin.H{})
 		return
 	}
+	log.Println("getTokenはerrorをかえしてこなかった")
 	// access-tokenとrefresh-tokenをクッキーに保存する
 	c.SetCookie("access-token", token.AccessToken, token.ExpiresIn, "/", config.ClientURL, false, true)
 	c.SetCookie("refresh-token", token.RefreshToken, token.RefreshExpiresIn, "/", config.ClientURL, false, true)
@@ -111,7 +116,7 @@ func procTopPage(c *gin.Context) {
 		c.HTML(200, "index.html", gin.H{"data": "failed to get api server"})
 		return
 	}
-	c.HTML(200, "index.html", gin.H{"data": result})
+	c.HTML(200, "index.html", gin.H{"data": result, "keycloak": config.KeycloakURL})
 }
 
 // **************************************************************************
@@ -271,8 +276,9 @@ func _getToken(realm, clientID, clientSecret string, values url.Values) (Token, 
 		return Token{}, err
 	}
 	if !(200 <= resp.StatusCode && resp.StatusCode < 300) {
-		log.Println(err)
-		return Token{}, err
+		log.Println("エラーレスポンスです")
+		log.Println(resp.StatusCode)
+		return Token{}, fmt.Errorf("received error response %d", resp.StatusCode)
 	}
 	var token Token
 	err = json.Unmarshal(b, &token)
