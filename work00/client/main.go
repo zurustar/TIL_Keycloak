@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/gin-contrib/sessions"
@@ -19,36 +20,34 @@ import (
 // 環境やkeycloakの設定に依存する値たち
 //
 
-// keycloakのURL
-const KeycloakURL = "http://192.168.0.200:8080"
-const ClientURL = "http://192.168.0.115:5000"
 const BindAddress = ":5000"
 
-const APIServerURL = "http://192.168.0.115:4000"
-
-// keycloakで作成する必要があるrealmの名前
-const MyRealm = "demo"
-
-// keycloakの上記realmに対して登録したこのアプリを示すID
-const ClientID = "kakeibo"
-
 // クライアント登録後にkeycloakの画面からコピーしてくる
-const ClientSecret = "HrkADtB2TuYLS9UrEyeWlbSSXrAAigMP"
+
+type Config struct {
+	Realm        string `json:"realm"`
+	KeycloakURL  string `json:"KeycloakURL"`
+	APIServerURL string `json:"APIServerURL"`
+	ClientURL    string `json:"ClientURL"` // このサーバのURL
+	ClientID     string `json:"ClientID`
+	ClientSecret string `json:"ClientSecret"` // KeycloackのGUIからとってきて設定ファイルに書く
+}
+
+var config Config
 
 // 認可エンドポイントからリダイレクトされてくるアドレス
 const RedirectPath = "/callback"
-const RedirectURI = ClientURL + RedirectPath
 
 // **************************************************************************
 //
 // ログイン要求を受けたらkeycloakにリダイレクトする
 //
 func procLogin(c *gin.Context) {
-	authEndpoint := KeycloakURL
-	authEndpoint += "/realms/" + MyRealm + "/protocol/openid-connect/auth" // 書籍のURLはいまのKeycloakでは動かない、要注意
-	authEndpoint += "?response_type=code"                                  // 認可コードフロー
-	authEndpoint += "&client_id=" + ClientID                               // クライアント＝このサーバのID、keycloakに登録しておく必要あり
-	authEndpoint += "&redirect_uri=" + url.QueryEscape(RedirectURI)        // リダイレクトURI
+	authEndpoint := config.KeycloakURL
+	authEndpoint += "/realms/" + config.Realm + "/protocol/openid-connect/auth"       // 書籍のURLはいまのKeycloakでは動かない、要注意
+	authEndpoint += "?response_type=code"                                             // 認可コードフロー
+	authEndpoint += "&client_id=" + config.ClientID                                   // クライアント＝このサーバのID、keycloakに登録しておく必要あり
+	authEndpoint += "&redirect_uri=" + url.QueryEscape(config.ClientURL+RedirectPath) // リダイレクトURI
 	c.Redirect(302, authEndpoint)
 }
 
@@ -86,14 +85,14 @@ func procCallback(c *gin.Context) {
 	log.Println("Keycloakのセッション管理用文字列 ->", sessionState)
 	log.Println("認可コード ->", code)
 	// 認可コードを使ってトークンを取りに行く
-	token, err := getToken(MyRealm, ClientID, ClientSecret, code, RedirectURI)
+	token, err := getToken(config.Realm, config.ClientID, config.ClientSecret, code, config.ClientURL+RedirectPath)
 	if err != nil {
 		c.HTML(500, "error.html", gin.H{})
 		return
 	}
 	// access-tokenとrefresh-tokenをクッキーに保存する
-	c.SetCookie("access-token", token.AccessToken, token.ExpiresIn, "/", ClientURL, false, true)
-	c.SetCookie("refresh-token", token.RefreshToken, token.RefreshExpiresIn, "/", ClientURL, false, true)
+	c.SetCookie("access-token", token.AccessToken, token.ExpiresIn, "/", config.ClientURL, false, true)
+	c.SetCookie("refresh-token", token.RefreshToken, token.RefreshExpiresIn, "/", config.ClientURL, false, true)
 	c.HTML(200, "content.html", gin.H{"sessionState": sessionState, "code": code, "accessToken": token.AccessToken})
 }
 
@@ -121,7 +120,7 @@ func procTopPage(c *gin.Context) {
 //
 func getDataFromAPIServer(accessToken string) (string, error) {
 	log.Println("getDataFromAPIServer(", accessToken, ")")
-	u := APIServerURL + "/"
+	u := config.APIServerURL + "/"
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		log.Println(err)
@@ -158,7 +157,6 @@ func getDataFromAPIServer(accessToken string) (string, error) {
 	return data.Data, nil
 }
 
-
 // **************************************************************************
 //
 // トークン関連のミドルウェア、
@@ -189,14 +187,14 @@ func checkToken(c *gin.Context) {
 	//	values.Add("client_id", ClientID)
 	//	values.Add("client_secret", ClientSecret)
 	values.Add("refresh_token", refreshToken)
-	token, err := _getToken(MyRealm, ClientID, ClientSecret, values)
+	token, err := _getToken(config.Realm, config.ClientID, config.ClientSecret, values)
 	if err != nil {
 		// トークン取得に失敗した
 		c.Next()
 		return
 	}
-	c.SetCookie("access-token", token.AccessToken, token.ExpiresIn, "/", ClientURL, false, true)
-	c.SetCookie("refresh-token", token.RefreshToken, token.RefreshExpiresIn, "/", ClientURL, false, true)
+	c.SetCookie("access-token", token.AccessToken, token.ExpiresIn, "/", config.ClientURL, false, true)
+	c.SetCookie("refresh-token", token.RefreshToken, token.RefreshExpiresIn, "/", config.ClientURL, false, true)
 	c.Set("access-token", token.AccessToken)
 	c.Next()
 
@@ -210,6 +208,20 @@ func checkToken(c *gin.Context) {
 //
 func main() {
 	log.SetFlags(log.Lshortfile)
+
+	if len(os.Args) < 2 {
+		log.Fatal("ついかいかた： client 設定ファイル")
+	}
+	data, err := ioutil.ReadFile(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(config)
+
 	engine := gin.Default()
 
 	// cookieの準備
@@ -237,7 +249,7 @@ func main() {
 //　トークンを取得する
 //
 func _getToken(realm, clientID, clientSecret string, values url.Values) (Token, error) {
-	tokenEndpoint := KeycloakURL + "/realms/" + realm + "/protocol/openid-connect/token"
+	tokenEndpoint := config.KeycloakURL + "/realms/" + realm + "/protocol/openid-connect/token"
 	req, err := http.NewRequest("POST", tokenEndpoint, strings.NewReader(values.Encode()))
 	if err != nil {
 		log.Println(err)
