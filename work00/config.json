@@ -1,0 +1,33 @@
+{
+	"realm": "demo",
+	"keycloak": {
+		"url": "http://192.168.0.200:8080",
+		"account": "admin",
+		"password": "admin"
+	},
+	"clients": [
+		{
+			"clientId": "kakeibo",
+			"publicClient": false,
+			"redirectUris": [
+				"http://192.168.0.115:5000*"
+			],
+			"webOrigins": [
+				"http://192.168.0.115:5000/"
+			],
+			"attributes":{
+				"backchannel.logout.session.required": "true",
+				"backchannel.logout.url": "http://192.168.0.115:5000/callback?logout=backchannel"
+			}
+		},
+		{
+			"clientId": "api_server",
+			"publicClient": false,
+			"redirectUris": [
+				"http://192.168.0.115:4000*"
+			]
+		}
+	],
+	"roles": ["supervisor", "administrator"],
+	"groups": ["A社", "B社", "C社", "D社"]
+}
