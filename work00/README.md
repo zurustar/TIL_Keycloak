@@ -24,13 +24,11 @@ keycloak を起動する。
 docker-compose up
 ```
 
-- tool フォルダ配下で go run ./main.go ./config.json を実行する
+- tool フォルダ配下で go run ./main.go ./config.json を実行する。keycloak に対して API を発行しまくってレルムの作成やクライアントの作成やグループの作成やロールの作成などが行われる。
 
 - keycloak の画面にアクセスして、ユーザを作成し、パスワードの設定と、適当なロールの追加と適当なグループの追加を実施する
 
-- client/config.json を修正する。ClientSecret は keycloak の画面で client の kakeibo の secret をコピー。
-
-- apiserver/main.go を修正する。ClientSecret は keycloak の画面で client の api_server の secret をコピー。★ ここはいずれ config に修正する予定。
+- secret.json を修正する。ClientSecret は keycloak の画面で client の kakeibo の secret をコピー、APIServerSecret は keycloak の画面で client の api_server の secret をコピー。
 
 - apiserver フォルダ配下で go run ./main.go を実行する
 
@@ -38,4 +36,4 @@ docker-compose up
 
 - ブラウザで client の URL にアクセスしてログインなどをやってみる。
 
-- できていないこと：api サーバでトークンから group の情報を取得することができていない。keycloak でトークンにグループ情報を含めるように設定できるのではないか？と疑っている
+- できていないこと：ログオフ処理がまだできていない
