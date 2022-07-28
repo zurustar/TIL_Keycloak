@@ -33,11 +33,22 @@ type Config struct {
 	ClientID     string `json:"ClientID`
 }
 
+func NewConfig() *Config {
+	p := new(Config)
+	p.Realm = "demo"
+	p.KeycloakURL = "http://127.0.0.1:8080"
+	p.ClientURL = "http://127.0.0.1:5000"
+	p.APIServerURL = "http://127.0.0.1:4000"
+	p.ClientID = "kakeibo"
+	return p
+}
+
 var config Config
 
 type Secret struct {
 	ClientSecret string `json:"ClientSecret"` // KeycloackのGUIからとってきて設定ファイルに書く
 }
+
 var secret Secret
 
 // 認可エンドポイントからリダイレクトされてくるアドレス
@@ -57,7 +68,7 @@ func procLogin(c *gin.Context) {
 }
 
 func procLogout(c *gin.Context) {
-	c.JSON(501,gin.H{})
+	c.JSON(501, gin.H{})
 }
 
 // **************************************************************************
@@ -225,15 +236,10 @@ func main() {
 	if len(os.Args) < 3 {
 		log.Fatal("ついかいかた： client 設定ファイル シークレット情報ファイル")
 	}
-	data, err := ioutil.ReadFile(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = json.Unmarshal(data, &config)
-	if err != nil {
-		log.Fatal(err)
-	}
-	data, err = ioutil.ReadFile(os.Args[2])
+
+	config = *NewConfig()
+
+	data, err := ioutil.ReadFile(os.Args[2])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -242,8 +248,6 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println(secret)
-
-
 
 	engine := gin.Default()
 

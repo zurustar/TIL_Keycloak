@@ -24,9 +24,7 @@ keycloak を起動する。
 docker-compose up
 ```
 
-- tool/config.json を環境にあわせて修正する。
-
--　 tool フォルダ配下で go run ./main.go ./config.json を実行する
+- tool フォルダ配下で go run ./main.go ./config.json を実行する
 
 - keycloak の画面にアクセスして、ユーザを作成し、パスワードの設定と、適当なロールの追加と適当なグループの追加を実施する
 

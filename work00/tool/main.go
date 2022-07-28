@@ -105,6 +105,9 @@ func NewConfig() *Config {
 	return p
 }
 
+//
+//
+//
 func main() {
 
 	config := *NewConfig()
@@ -204,10 +207,16 @@ func createRealm(c Config, token string) (string, error) {
 	return post(c.Keycloak.URL+"/admin/realms/", token, RealmInfo{Realm: c.Realm, Enabled: true})
 }
 
+//
+//
+//
 func createClient(c Config, cl Client, token string) (string, error) {
 	return post(c.Keycloak.URL+"/admin/realms/"+c.Realm+"/clients", token, cl)
 }
 
+//
+//
+//
 func addRole(c Config, token, role string) (string, error) {
 	type RoleInfo struct {
 		Name string `json:"name"`
@@ -215,6 +224,9 @@ func addRole(c Config, token, role string) (string, error) {
 	return post(c.Keycloak.URL+"/admin/realms/"+c.Realm+"/roles", token, RoleInfo{Name: role})
 }
 
+//
+//
+//
 func addGroup(c Config, token, group string) (string, error) {
 	type GroupInfo struct {
 		Name string `json:"name"`
@@ -254,6 +266,9 @@ func post(path, token string, jsondata any) (string, error) {
 	return string(body), nil
 }
 
+//
+//
+//
 func del(path, token string) (string, error) {
 	req, err := http.NewRequest(
 		"DELETE", path, nil)

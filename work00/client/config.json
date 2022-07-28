@@ -1,7 +1,0 @@
-{
-  "realm": "demo",
-  "KeycloakURL": "http://127.0.0.1:8080",
-  "ClientURL": "http://127.0.0.1:5000",
-  "APIServerURL": "http://127.0.0.1:4000",
-  "ClientID": "kakeibo"
-}
