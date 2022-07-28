@@ -24,7 +24,7 @@ func NewProtocolMapperConfig() *ProtocolMapperConfig {
 	p := new(ProtocolMapperConfig)
 	p.FullPath = "true"
 	p.IDTokenClaim = "false"
-	p.AccessTokenClaim = "false"
+	p.AccessTokenClaim = "true" // たぶんこれがトークンにグループを追加するという意味
 	p.ClaimName = "groups"
 	p.UserinfoTokenClaim = "true"
 	return p
