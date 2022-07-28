@@ -31,10 +31,14 @@ type Config struct {
 	APIServerURL string `json:"APIServerURL"`
 	ClientURL    string `json:"ClientURL"` // このサーバのURL
 	ClientID     string `json:"ClientID`
-	ClientSecret string `json:"ClientSecret"` // KeycloackのGUIからとってきて設定ファイルに書く
 }
 
 var config Config
+
+type Secret struct {
+	ClientSecret string `json:"ClientSecret"` // KeycloackのGUIからとってきて設定ファイルに書く
+}
+var secret Secret
 
 // 認可エンドポイントからリダイレクトされてくるアドレス
 const RedirectPath = "/callback"
@@ -87,7 +91,7 @@ func procCallback(c *gin.Context) {
 	log.Println("認可コード ->", code)
 	// 認可コードを使ってトークンを取りに行く
 	log.Println("getTokenを呼び出す")
-	token, err := getToken(config.Realm, config.ClientID, config.ClientSecret, code, config.ClientURL+RedirectPath)
+	token, err := getToken(config.Realm, config.ClientID, secret.ClientSecret, code, config.ClientURL+RedirectPath)
 	log.Println(err)
 	if err != nil {
 		log.Println(err)
@@ -192,7 +196,7 @@ func checkToken(c *gin.Context) {
 	//	values.Add("client_id", ClientID)
 	//	values.Add("client_secret", ClientSecret)
 	values.Add("refresh_token", refreshToken)
-	token, err := _getToken(config.Realm, config.ClientID, config.ClientSecret, values)
+	token, err := _getToken(config.Realm, config.ClientID, secret.ClientSecret, values)
 	if err != nil {
 		// トークン取得に失敗した
 		c.Next()
@@ -214,8 +218,8 @@ func checkToken(c *gin.Context) {
 func main() {
 	log.SetFlags(log.Lshortfile)
 
-	if len(os.Args) < 2 {
-		log.Fatal("ついかいかた： client 設定ファイル")
+	if len(os.Args) < 3 {
+		log.Fatal("ついかいかた： client 設定ファイル シークレット情報ファイル")
 	}
 	data, err := ioutil.ReadFile(os.Args[1])
 	if err != nil {
@@ -225,7 +229,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(config)
+	data, err = ioutil.ReadFile(os.Args[2])
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = json.Unmarshal(data, &secret)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(secret)
+
+
 
 	engine := gin.Default()
 

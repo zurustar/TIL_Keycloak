@@ -3,6 +3,5 @@
   "KeycloakURL": "http://192.168.0.200:8080",
   "ClientURL": "http://192.168.0.115:5000",
   "APIServerURL": "http://192.168.0.115:4000",
-  "ClientID": "kakeibo",
-  "ClientSecret": "k4oqKCQ1r8fWN8kpyNKTzS8EhjqbzPNN"
+  "ClientID": "kakeibo"
 }
