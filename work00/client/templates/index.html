@@ -14,6 +14,10 @@
     {{ .data }}
 
     <hr />
+
+    ログオフする場合は<a href="/logout">こちら</a>
+
+    <hr />
     事前に<a href="{{ .keycloak }}">Keycloak</a
     >にログインしてユーザを作成し、グループへの追加とロールの割り当て、パスワードの設定をしてください。パスワード設定時には「Temporary」をOFFにしたほうがいいと思います。<br />
     keycloak再起動後はツールでデータ投入してもSecretが変わるのでclientとAPIサーバの設定修正が必要です

@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 )
 
@@ -48,55 +47,78 @@ func NewProtocolMapper() *ProtocolMapper {
 	return p
 }
 
+type ClientAttributes struct {
+	BackchannnelLogoutURL       string `json:"backchannel.logout.url"`
+	BackchannnelSessionRequired string `json:"backchannel.logout.session.required"`
+}
+
 type Client struct {
 	ClientID        string           `json:"clientId"`
 	PublicClient    bool             `json:"publicClient"`
 	RedirectURIs    []string         `json:"redirectUris"`
 	WebOrigins      []string         `json:"webOrigins"`
 	ProtocolMappers []ProtocolMapper `json:"protocolMappers"`
-	Attributes      struct {
-		BackchannnelLogoutURL       string `json:"backchannel.logout.url"`
-		BackchannnelSessionRequired string `json:"backchannel.logout.session.required"`
-	} `json:"attributes"`
+	Attributes      ClientAttributes `json:"attributes"`
 }
 
 type Keycloak struct {
-	URL      string `json:"url"`
-	Account  string `json:"account"`
-	Password string `json:"password"`
+	URL           string
+	AdminAccount  string
+	AdminPassword string
 }
 
 type Config struct {
-	Realm    string   `json:"realm"`
-	Keycloak Keycloak `json:"keycloak"`
+	Realm    string
+	Keycloak Keycloak
 	Clients  []Client `json:"clients"`
-	Roles    []string `json:"roles"`
-	Groups   []string `json:"groups"`
+	Roles    []string
+	Groups   []string
+}
+
+func NewConfig() *Config {
+	p := new(Config)
+	p.Realm = "demo"
+	p.Keycloak = Keycloak{
+		URL:           "http://127.0.0.1:8080",
+		AdminAccount:  "admin",
+		AdminPassword: "admin",
+	}
+	p.Clients = []Client{
+		{
+			ClientID:     "kakeibo",
+			PublicClient: false,
+			RedirectURIs: []string{"http://127.0.0.1:5000*"},
+			WebOrigins:   []string{"http://127.0.0.1:5000/"},
+			Attributes: ClientAttributes{
+				BackchannnelSessionRequired: "true",
+				BackchannnelLogoutURL:       "http://127.0.0.1:5000/callback?logout=backchannel",
+			},
+		},
+		{
+			ClientID:     "api_server",
+			PublicClient: false,
+			RedirectURIs: []string{"http://127.0.0.1:4000*"},
+		},
+	}
+	p.Roles = []string{"supervisor", "administrator", "staff"}
+	p.Groups = []string{"A社", "B社", "C社", "D社"}
+	return p
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("使い方：tool 設定ファイル")
-	}
-	data, err := ioutil.ReadFile(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-	var config Config
-	err = json.Unmarshal(data, &config)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	config := *NewConfig()
+
 	log.Println(config)
 	token := getAccessToken(config)
 	deleteRealm(config, token)
-	_, err = createRealm(config, token)
+	_, err := createRealm(config, token)
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, client := range config.Clients {
 		client.ProtocolMappers = []ProtocolMapper{*NewProtocolMapper()}
-		respBody, err := createClient(config.Realm, config.Keycloak, client, token)
+		respBody, err := createClient(config, client, token)
 		if err != nil {
 			log.Println(respBody)
 			log.Fatal(err)
@@ -124,8 +146,8 @@ func main() {
 //
 func getAccessToken(c Config) string {
 	values := url.Values{}
-	values.Set("username", c.Keycloak.Account)
-	values.Add("password", c.Keycloak.Password)
+	values.Set("username", c.Keycloak.AdminAccount)
+	values.Add("password", c.Keycloak.AdminPassword)
 	values.Add("grant_type", "password")
 	values.Add("client_id", "admin-cli")
 	req, err := http.NewRequest(
@@ -182,8 +204,8 @@ func createRealm(c Config, token string) (string, error) {
 	return post(c.Keycloak.URL+"/admin/realms/", token, RealmInfo{Realm: c.Realm, Enabled: true})
 }
 
-func createClient(realm string, k Keycloak, cl Client, token string) (string, error) {
-	return post(k.URL+"/admin/realms/"+realm+"/clients", token, cl)
+func createClient(c Config, cl Client, token string) (string, error) {
+	return post(c.Keycloak.URL+"/admin/realms/"+c.Realm+"/clients", token, cl)
 }
 
 func addRole(c Config, token, role string) (string, error) {

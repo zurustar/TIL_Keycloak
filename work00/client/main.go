@@ -56,6 +56,10 @@ func procLogin(c *gin.Context) {
 	c.Redirect(302, authEndpoint)
 }
 
+func procLogout(c *gin.Context) {
+	c.JSON(501,gin.H{})
+}
+
 // **************************************************************************
 //
 // トークンを取得する
@@ -258,6 +262,7 @@ func main() {
 	engine.Static("/static", "./static")
 	engine.LoadHTMLGlob("templates/*")
 	engine.GET("/login", procLogin)
+	engine.GET("/logout", procLogout)
 	engine.GET(RedirectPath, procCallback)
 	engine.GET("/", checkToken, procTopPage)
 	engine.Run(BindAddress)

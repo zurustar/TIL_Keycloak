@@ -2,12 +2,26 @@
 
 このフォルダは、keycloak まわりがいまいち理解できている感がないので、Keycloak 以外にアダプタの類を使用せずに自力で実装することでちゃんと理解しようとしているものです。
 
+# 構成
+
+全部 127.0.0.1 で起動する。
+
+使用するポートは以下の通り。
+
+Keycloak - 8080
+アプリ（Client もしくは RP) - 5000
+リソースサーバ(API サーバ) - 4000
+
+レルム名 - demo
+アプリのクライアント ID - kakeibo
+リソースサーバのクライアント ID - api_server
+
 # つかいかた
 
-- keycloak を起動する。docker なら たとえば以下のような感じ
+keycloak を起動する。
 
 ```
-docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:18.0.2 start-dev
+docker-compose up
 ```
 
 - tool/config.json を環境にあわせて修正する。
