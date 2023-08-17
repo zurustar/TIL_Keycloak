@@ -1,0 +1,33 @@
+services:
+  #
+  # 静的コンテンツの配信用nginx、
+  # 同時にkeycloakやapiサーバへの中継は！！行わない！！
+  #
+  webserver:
+    image: nginx:stable-alpine3.17-slim
+    volumes:
+      - ./webserver:/etc/nginx/conf.d
+      - ./app/build:/usr/share/nginx/html
+    ports:
+      - "8000:80"
+  #
+  # APIサーバ
+  #
+#  apiserver:
+#    build:
+#      context: ./api
+#    command: uvicorn main:app --reload --host 0.0.0.0 --port 3000
+#    ports:
+#      - "3000:3000"
+  #
+  # 認証サーバ
+  # nginxから中継するのだからポート番号は指定しなくて良いのかも？
+  #
+  authserver:
+    image: quay.io/keycloak/keycloak:21.1.1
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8080:8080"

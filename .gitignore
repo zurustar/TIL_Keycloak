@@ -7,3 +7,5 @@ pgdata
 dummy_api/DummyAPI
 tool/tool
 tool/tool.exe
+*.exe
+
